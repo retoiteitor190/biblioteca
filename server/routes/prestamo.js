@@ -52,24 +52,46 @@ app.post('/prestamo', [verificarToken], function(req, res) {
 app.put('/prestamo/:id', [verificarToken], function(req, res) {
     let id = req.params.id;
     let body = _.pick(req.body, ['usuario', 'libro', 'fechaPrestamo', 'fechaEntrega']);
-
-});
-app.delete('/prestamo/:id', [verificarToken], function(req, res) {
-    let id = req.params.id;
-
-    Productos.findByIdAndUpdate(id, { new: true, runValidators: true, context: 'query' }, (err, resp) => {
+    Prestamo.findByIdAndUpdate(id, body, { new: true, runValidators: true, context: 'query' }, (err, prestamoDB) => {
         if (err) {
             return res.status(400).json({
                 ok: false,
-                mensaje: `Ocurrio un error al momento de eliminar el prestamo,
-                intente de nuevo ${ err }`
+                mensaje: `Ocurrio un error al momento de actualizar ${err}`
             });
         }
         return res.json({
             ok: true,
-            mensaje: 'El prestamo ya no se encuentra en el inventario',
-            resp
+            mensaje: 'Cambios guardados con exito',
+            prestamo: prestamoDB
         });
     });
 });
+
+
+app.delete('/prestamo/:id', [verificarToken], function(req, res) {
+    let id = req.params.id;
+    Prestamo.deleteOne({ _id: id }, (err, resp) => {
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                err
+            });
+        }
+        if (resp.deletedCount === 0) {
+            return res.status(400).json({
+                ok: false,
+                err: {
+                    id,
+                    msg: 'prestamo no encontrado'
+                }
+            });
+        }
+        return res.status(200).json({
+            ok: true,
+            resp
+        });
+
+    });
+});
+
 module.exports = app;
